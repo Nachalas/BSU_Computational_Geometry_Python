@@ -1,0 +1,188 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Дано: P = {p1, ..., pn}, Q = {q1, ..., qm}
+# оба выпуклые
+#
+# Надо: аним.движения друг к другу и реализовать
+# алгоритм пересечения двух выпуклых многоугольников
+
+
+polygon_1 = np.array([np.array([3, 9]), np.array([6, 3]), np.array([12, 3]), np.array([15, 9]), np.array([12, 12]), np.array([6, 12]), np.array([3, 9])])
+# polygon_2 = np.array([np.array([5, 10]), np.array([8, 4]), np.array([14, 4]), np.array([17, 10]), np.array([14, 13]), np.array([8, 13]), np.array([5, 10])])
+# polygon_2 = np.array([np.array([4, 6]), np.array([14, 6]), np.array([14, 11]), np.array([4, 11]), np.array([4, 6])])
+# polygon_2 = np.array([np.array([15, 6]), np.array([25, 6]), np.array([25, 11]), np.array([15, 11]), np.array([15, 6])])
+polygon_2 = np.array([np.array([4, 0]), np.array([14, 0]), np.array([14, 5]), np.array([4, 5]), np.array([4, 0])])
+
+
+# Нацелен ли а на b
+def is_pointed_at(a, b):
+    a_start = a[0]
+    a_end = a[1]
+    b_start = b[0]
+    b_end = b[1]
+    # debug_1 = np.linalg.det([b_end - b_start, a_end - b_start])
+    # debug_2 = np.linalg.det([b_end - b_start, a_end - a_start])
+    # c = a_start - a_end
+    # d = b_end - a_end
+    # debug_3 = np.dot(a_start - a_end, b_start - a_end)
+    # return (np.linalg.det([b_end - b_start, a_end - b_start]) > 0 and np.linalg.det([b_end - b_start, a_end - a_start]) < 0) or \
+    #        (np.linalg.det([b_end - b_start, a_end - b_start]) < 0 and np.linalg.det([b_end - b_start, a_end - a_start]) > 0) or \
+    #     np.dot(a_start - a_end, b_start - a_end) < 0
+    return (np.cross(a_end - a_start, b_end - b_start) > 0 and point_and_a_straight_line(b_start, b_end, a_end) != 2) or \
+           (np.cross(a_end - a_start, b_end - b_start) < 0 and point_and_a_straight_line(b_start, b_end, a_end) != 1)
+
+
+# 1 - левее, 2 - правее
+def point_and_a_straight_line(p1, p2, p0):
+    v = np.cross(p2 - p1, p0 - p1)
+    if v > 0:
+        return 1
+    elif v < 0:
+        return 2
+    else:
+        return 0
+
+
+# аааа блять
+def line_intersection(line1, line2):
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+       return [-1,-1]
+
+    d = (det(*line1), det(*line2))
+    x = det(d, xdiff) / div
+    y = det(d, ydiff) / div
+    return [x, y]
+
+
+# принадлежит ли точка отрезку, есть округление потому что хуй
+def is_point_segment(x1, x2, x0):
+    x = [x1[0], x2[0]]
+    x.sort()
+    if x0[0] < x[0] or x0[0] > x[1]:
+        return 0
+    x1x2 = x2 - x1
+    x1x0 = x0 - x1
+    vm = np.cross(x1x2, x1x0)
+    if vm == 0 or abs(vm) < 0.000001:
+        return 1
+    return 0
+
+
+# получить внешний отрезок - а нахуй оно надо?
+# def get_outer_segment(fs, ss):
+#     if point_and_a_straight_line(ss[0], ss[1], fs[1]) == 2:
+#         return fs
+#     else:
+#         return ss
+
+
+# Внешний ли первый для второго?
+def is_outer_segment(fs, ss):
+    if point_and_a_straight_line(ss[0], ss[1], fs[1]) != 1:
+        return True
+    else:
+        return False
+
+
+# проверка точек на равенство потому что я заебался сравнивать строкой по 765752546 символов длиной
+def check_point_equality(a, b):
+    return a[0] == b[0] and a[1] == b[1]
+
+def find_intersection_of_polygons(polygon_1, polygon_2):
+    intersection = []
+    i = j = k = 0
+    while k != 2*(len(polygon_1)+len(polygon_2)):
+        if i == len(polygon_1) - 1:
+            i = 0
+        if j == len(polygon_2) - 1:
+            j = 0
+        segment_first = [polygon_1[i], polygon_1[i+1]] #p
+        segment_second = [polygon_2[j], polygon_2[j+1]] #q
+        print(segment_first)
+        print(segment_second)
+    #     движение нах
+    #     Первый случай нах: направлены друг на друга
+        if is_pointed_at(segment_first, segment_second) and is_pointed_at(segment_second, segment_first):
+            if is_outer_segment(segment_first, segment_second):
+                i += 1
+            else:
+                j += 1
+            # temp = get_outer_segment(segment_first, segment_second)
+            # if check_point_equality(segment_first[0], temp[0]) and check_point_equality(segment_first[1], temp[1]):
+            #     i += 1
+            # else:
+            #     j += 1
+    #     Второй случай нах:
+        elif is_pointed_at(segment_first, segment_second) and is_pointed_at(segment_second, segment_first) != True:
+            if is_outer_segment(segment_first, segment_second) != True:
+                print(segment_first[1])
+                intersection.append(segment_first[1])
+            i += 1
+    #     Третий случай нах:
+        elif is_pointed_at(segment_first, segment_second) != True and is_pointed_at(segment_second, segment_first):
+            if is_outer_segment(segment_second, segment_first) != True:
+                print(segment_second[1])
+                intersection.append(segment_second[1])
+            j += 1
+    #     Четвёртый ёптый:
+        elif is_pointed_at(segment_first, segment_second) != True and is_pointed_at(segment_second, segment_first) != True:
+            poi = line_intersection(segment_first, segment_second)
+            if poi[0] != -1 and poi[1] != -1:
+                if is_point_segment(polygon_1[i], polygon_1[i + 1], poi) and is_point_segment(polygon_2[j], polygon_2[j + 1], poi):
+                    print(poi)
+                    intersection.append(poi)
+            if is_outer_segment(segment_first, segment_second):
+                i += 1
+            else:
+                j += 1
+    #     движение нах
+        k += 1
+    return intersection
+
+
+# print(is_pointed_at([np.array([8,13]), np.array([6,10])], [np.array([12,12]), np.array([6,12])]))
+
+
+# a = np.array([np.array([1,1]), np.array([5,5])])
+# b = np.array([np.array([1,5]), np.array([5,1])])
+# print(line_intersection(a,b))
+
+# for i in range(6):
+#     for i in polygon_2:
+#         i[1] -=1
+intersection = find_intersection_of_polygons(polygon_1, polygon_2)
+print(intersection)
+
+arr_x = []
+arr_y = []
+for item in polygon_1:
+    arr_x.append(item[0])
+    arr_y.append(item[1])
+plt.plot(arr_x, arr_y)
+
+
+arr_x2 = []
+arr_y2 = []
+for item in polygon_2:
+    arr_x2.append(item[0])
+    arr_y2.append(item[1])
+plt.plot(arr_x2, arr_y2)
+
+
+arr_x3 = []
+arr_y3 = []
+for item in intersection:
+    arr_x3.append(item[0])
+    arr_y3.append(item[1])
+plt.plot(arr_x3, arr_y3)
+plt.show()
+
+
